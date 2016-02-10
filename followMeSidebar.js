@@ -1,166 +1,168 @@
 /*
- * FollowMeSidebarJS
+ * FollowMeSidebar
  * Copyright (c) 2016 Yuya Hoshino
  * Released under the MIT license
  * http://opensource.org/licenses/mit-license.php
  */
 (function($) {
 	var windowH, scrollTop, scrollTopPrev, scrollBottom;
-	var fms = '#followMeSidebar';
 	var relativeSty = {
 		'left':0,
 		'position':'relative',
 		'width':'100%'
 	};
 	var methods = {
-		getNum:function(n, A) {
-			var Ao, So;
-			n.AH = A.height();
-			Ao = A.offset();
-			n.AT = Ao.top;
-			n.AB = n.AT + n.AH;
-			relativeSty['top'] = 0;
-			relativeSty['bottom'] = 'auto';
-			$(fms).css(relativeSty).addClass('relative');
-			So = $(this).offset();
-			n.SW = $(this).width();
-			n.SH = $(fms).outerHeight(true);
-			n.SL = So.left + parseInt($(this).css('margin-left')) + parseInt($(this).css('padding-left')) + parseInt($(this).css('border-left-width'));
-			n.ST = So.top;
-			n.SB = n.ST + n.SH;
-			n.STB = n.AB - n.SH;
-			n.STM = n.ST;
-			return n;
+		getNum:function(fms, num, moveableArea) {
+			var moveableAreaOffset, sidebarOffset;
+			num.AH = moveableArea.height();
+			moveableAreaOffset = moveableArea.offset();
+			num.AT = moveableAreaOffset.top;
+			num.AB = num.AT + num.AH;
+			relativeSty.top = 0;
+			relativeSty.bottom = 'auto';
+			$('#' + fms).css(relativeSty).addClass('relative');
+			sidebarOffset = $(this).offset();
+			num.SW = $(this).width();
+			num.SH = $('#' + fms).outerHeight(true);
+			num.SL = sidebarOffset.left + parseInt($(this).css('margin-left')) + parseInt($(this).css('padding-left'));
+			num.ST = sidebarOffset.top;
+			num.SB = num.ST + num.SH;
+			num.STB = num.AB - num.SH;
+			num.STM = num.ST;
+			return num;
 		},
-		getType:function(n, s) {
-			s['left'] = n.SL + 'px';
-			s['width'] = n.SW + 'px';
-			if (n.SH < n.AH && n.SH <= windowH)			return 1;
-			else if (n.SH < n.AH && n.SH > windowH)	return 2;
-			else										return false;
+		getType:function(num, fixedSty) {
+			fixedSty.left = num.SL + 'px';
+			fixedSty.width = num.SW + 'px';
+			if (num.SH < num.AH && num.SH <= windowH)		return 1;
+			else if (num.SH < num.AH && num.SH > windowH)	return 2;
+			else											return false;
 		},
-		scrollDirection:function(n, p) {
-			if (p > n)			return 'up';
-			else if (p < n)	return 'down';
-			else				return 'stay';
+		scrollDirection:function(scrollTop, scrollTopPrev) {
+			if (scrollTopPrev > scrollTop)			return 'up';
+			else if (scrollTopPrev < scrollTop)	return 'down';
+			else									return 'stay';
 		},
-		changePosition:function(t, b, s) {
-			if (s['position'] === 'fixed') {
-				if ($(fms).hasClass('relative')) {
-					s['top'] = t;
-					s['bottom'] = b;
-					$(fms).css(s).removeClass('relative').addClass('fixed');
+		changePosition:function(top, bottom, relativeSty) {
+			var elm = this;
+			if (relativeSty.position === 'fixed') {
+				if ($(elm).hasClass('relative')) {
+					relativeSty.top = top;
+					relativeSty.bottom = bottom;
+					$(elm).css(relativeSty).removeClass('relative').addClass('fixed');
 				}
-			} else if (s['position'] === 'relative') {
-				if ($(fms).hasClass('fixed')) {
-					s['top'] = t;
-					s['bottom'] = b;
-					$(fms).css(s).removeClass('fixed').addClass('relative');
+			} else if (relativeSty.position === 'relative') {
+				if ($(elm).hasClass('fixed')) {
+					relativeSty.top = top;
+					relativeSty.bottom = bottom;
+					$(elm).css(relativeSty).removeClass('fixed').addClass('relative');
 				}
 			}
 		},
-		run:function(OPT, n, A, s) {
+		run:function(fms, options, num, movableArea, fixedSty) {
 			var elm = this;
-			if (OPT.flag) {
+			if (options.flag) {
 				var loop = function() {
-					if (eval(OPT.flag)) {
+					if (eval(options.flag)) {
 						clearTimeout(loopTimer);
-						n = methods.getNum.call(elm, n, A);
-						var type = methods.getType.call(null, n, s);
-						methods.loading.call(elm, OPT, type, n, s);
+						$(elm).height($(elm).height());
+						n = methods.getNum.call(elm, fms, num, movableArea);
+						var type = methods.getType.call(null, num, fixedSty);
+						methods.loading.call(elm, fms, options, type, num, fixedSty);
 					} else {
 						loopTimer = setTimeout(loop, 0);
 					}
 				};
 				var loopTimer = setTimeout(loop, 0);
 			} else {
-				n = methods.getNum.call(elm, n, A);
-				var type = methods.getType.call(null, n, s);
-				methods.loading.call(elm, OPT, type, n, s);
+				n = methods.getNum.call(elm, fms, num, movableArea);
+				var type = methods.getType.call(null, num, fixedSty);
+				methods.loading.call(elm, fms, options, type, num, fixedSty);
 			}
 		},
-		loading:function(op, t, n, s) {
-			methods.scrolling.call(window, op, t, n, s);
+		loading:function(fms, options, type, num, fixedSty) {
+			methods.scrolling.call(window, fms, options, type, num, fixedSty);
 			var scrollTimer = false;
-			$(window).off('scroll.followMeSidebar').on('scroll.followMeSidebar', function() {
-				methods.scrolling.call(this, op, t, n, s);
+			$(window).off('scroll.' + fms).on('scroll.' + fms, function() {
+				methods.scrolling.call(this, fms, options, type, num, fixedSty);
 			});
 		},
-		scrolling:function(options, type, num, fixedSty) {
+		scrolling:function(fms, options, type, num, fixedSty) {
 			scrollTop = $(this).scrollTop();
 			scrollBottom = scrollTop + windowH;
 			
 			if (methods.scrollDirection.call(null, scrollTop, scrollTopPrev) == 'down') {
 				if (type === 1) {
 					if ((scrollBottom - (windowH - num.SH)) >= num.AB) {// B
-						methods.changePosition.call(null, num.STB - num.ST, 0, relativeSty);
+						methods.changePosition.call($('#' + fms), num.STB - num.ST, 0, relativeSty);
 					} else if (num.ST <= scrollTop) {// A
-						methods.changePosition.call(null, 0, 'auto', fixedSty);
+						methods.changePosition.call($('#' + fms), 0, 'auto', fixedSty);
 					}
 				} else if (type === 2) {
 					if (scrollBottom >= num.AB) {// B
-						methods.changePosition.call(null, num.STB - num.ST, 'auto', relativeSty);
+						methods.changePosition.call($('#' + fms), num.STB - num.ST, 'auto', relativeSty);
 					} else if (scrollBottom >= (num.STM + num.SH)) {// A
 						num.STM = scrollBottom - num.SH;
-						methods.changePosition.call(null, 'auto', 0, fixedSty);
+						methods.changePosition.call($('#' + fms), 'auto', 0, fixedSty);
 					} else if (scrollTop >= num.STM) {// F
-						methods.changePosition.call(null, num.STM - num.ST, 'auto', relativeSty);
+						methods.changePosition.call($('#' + fms), num.STM - num.ST, 'auto', relativeSty);
 					}
 				}
 			} else if (methods.scrollDirection.call(null, scrollTop, scrollTopPrev) == 'up') {
 				if (type === 1) {
 					if (scrollTop <= num.AT) {// D
-						methods.changePosition.call(null, 0, 'auto', relativeSty);
+						methods.changePosition.call($('#' + fms), 0, 'auto', relativeSty);
 					} else if (scrollTop <= num.STB) {// C
-						methods.changePosition.call(null, 0, 'auto', fixedSty);
+						methods.changePosition.call($('#' + fms), 0, 'auto', fixedSty);
 					}
 				} else if (type === 2) {
 					if (scrollTop <= num.AT) {// D
-						methods.changePosition.call(null, 0, 'auto', relativeSty);
+						methods.changePosition.call($('#' + fms), 0, 'auto', relativeSty);
 					} else if (scrollTop <= num.STM) {// C
 						num.STM = scrollTop;
-						methods.changePosition.call(null, 0, 'auto', fixedSty);
+						methods.changePosition.call($('#' + fms), 0, 'auto', fixedSty);
 					} else if (scrollBottom <= (num.STM + num.SH)) {// E
-						methods.changePosition.call(null, num.STM - num.ST, 'auto', relativeSty);
+						methods.changePosition.call($('#' + fms), num.STM - num.ST, 'auto', relativeSty);
 					}
 				}
 			} else if (methods.scrollDirection.call(null, scrollTop, scrollTopPrev) == 'stay') {
 				if (type === 1) {
 					if (scrollTop <= num.ST) {
-						methods.changePosition.call(null, 0, 'auto', relativeSty);
+						methods.changePosition.call($('#' + fms), 0, 'auto', relativeSty);
 					} else if (scrollTop <= num.STB) {
-						methods.changePosition.call(null, 0, 'auto', fixedSty);
+						methods.changePosition.call($('#' + fms), 0, 'auto', fixedSty);
 					} else {
-						methods.changePosition.call(null, num.STB - num.ST, 'auto', relativeSty);
+						methods.changePosition.call($('#' + fms), num.STB - num.ST, 'auto', relativeSty);
 					}
 				} else if (type === 2) {
 					if (scrollTop <= num.ST) {
-						methods.changePosition.call(null, 0, 'auto', relativeSty);
+						methods.changePosition.call($('#' + fms), 0, 'auto', relativeSty);
 					} else if (scrollTop <= num.STB) {
 						num.STM = scrollTop;
-						methods.changePosition.call(null, 0, 'auto', fixedSty);
+						methods.changePosition.call($('#' + fms), 0, 'auto', fixedSty);
 					} else {
 						num.STM = num.STB;
-						methods.changePosition.call(null, num.STB - num.ST, 'auto', relativeSty);
+						methods.changePosition.call($('#' + fms), num.STB - num.ST, 'auto', relativeSty);
 					}
 				}
 			}
 			scrollTopPrev = scrollTop;
 		}
-	}
+	};
 	
 	$.fn.followMeSidebar = function(options) {
 		if (typeof options === 'string') {
 			var action = options;
 		} else {
-			var options = $.extend({
+			options = $.extend({
 				area:'body',
 				flag:true,
 				device:false
 			}, options);
 		}
 		
-		return this.each(function() {
+		return this.each(function(i) {
+			var fms = 'followMeSidebar' + i;
 			var moveableArea = $(options.area);
 			var num = {};
 			var sidebarElm = this;
@@ -168,11 +170,11 @@
 				'position':'fixed'
 			};
 			
-			if (!$(fms).length)
-				$(this).wrapInner('<div id="followMeSidebar"></div>');
+			if (!$('#' + fms).length)
+				$(this).wrapInner('<div id="' + fms + '"></div>');
 			
 			if (action == 'destroy') {
-				$(window).off('scroll.followMeSidebar');
+				$(window).off('scroll.' + fms);
 				return false;
 			}
 			
@@ -191,10 +193,10 @@
 						devWidth = $(window).width();
 					
 					if (!options.device) {
-						methods.run.call(sidebarElm, options, num, moveableArea, fixedSty);
+						methods.run.call(sidebarElm, fms, options, num, moveableArea, fixedSty);
 					} else {
 						if (devWidth > options.device) {
-							methods.run.call(sidebarElm, options, num, moveableArea, fixedSty);
+							methods.run.call(sidebarElm, fms, options, num, moveableArea, fixedSty);
 						} else {
 							$(sidebarElm).followMeSidebar('destroy');
 						}
