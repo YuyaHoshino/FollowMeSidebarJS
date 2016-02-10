@@ -1,5 +1,5 @@
 /*
- * FollowMeSidebar
+ * FollowMeSidebarJS
  * Copyright (c) 2016 Yuya Hoshino
  * Released under the MIT license
  * http://opensource.org/licenses/mit-license.php
