@@ -7,7 +7,7 @@
 (function($) {
 	var windowH, scrollTop, scrollTopPrev, scrollBottom;
 	var fms = '#followMeSidebar';
-	var relative_style = {
+	var relativeSty = {
 		'left':0,
 		'position':'relative',
 		'width':'100%'
@@ -19,9 +19,9 @@
 			Ao = A.offset();
 			n.AT = Ao.top;
 			n.AB = n.AT + n.AH;
-			relative_style['top'] = 0;
-			relative_style['bottom'] = 'auto';
-			$(fms).css(relative_style).addClass('relative');
+			relativeSty['top'] = 0;
+			relativeSty['bottom'] = 'auto';
+			$(fms).css(relativeSty).addClass('relative');
 			So = $(this).offset();
 			n.SW = $(this).width();
 			n.SH = $(fms).outerHeight(true);
@@ -38,26 +38,6 @@
 			if (n.SH < n.AH && n.SH <= windowH)			return 1;
 			else if (n.SH < n.AH && n.SH > windowH)	return 2;
 			else										return false;
-		},
-		run:function(op, n, A, s) {
-			var elm = this;
-			if (op.flug) {
-				var loop = function() {
-					if (eval(op.flug)) {
-						clearTimeout(loopTimer);
-						n = methods.getNum.call(elm, n, A);
-						var type = methods.getType.call(null, n, s);
-						methods.loading.call(elm, op, type, n, s);
-					} else {
-						loopTimer = setTimeout(loop, 0);
-					}
-				};
-				var loopTimer = setTimeout(loop, 0);
-			} else {
-				n = methods.getNum.call(elm, n, A);
-				var type = methods.getType.call(null, n, s);
-				methods.loading.call(elm, op, type, n, s);
-			}
 		},
 		scrollDirection:function(n, p) {
 			if (p > n)			return 'up';
@@ -79,66 +59,25 @@
 				}
 			}
 		},
-		scrolling:function(options, type, num, fixed_style) {
-			scrollTop = $(this).scrollTop();
-			scrollBottom = scrollTop + windowH;
-			
-			if (methods.scrollDirection.call(null, scrollTop, scrollTopPrev) == 'down') {
-				if (type === 1) {
-					if ((scrollBottom - (windowH - num.SH)) >= num.AB) {// B
-						methods.changePosition.call(null, num.STB - num.ST, 0, relative_style);
-					} else if (num.ST <= scrollTop) {// A
-						methods.changePosition.call(null, 0, 'auto', fixed_style);
-					}
-				} else if (type === 2) {
-					if (scrollBottom >= num.AB) {// B
-						methods.changePosition.call(null, num.STB - num.ST, 'auto', relative_style);
-					} else if (scrollBottom >= (num.STM + num.SH)) {// A
-						num.STM = scrollBottom - num.SH;
-						methods.changePosition.call(null, 'auto', 0, fixed_style);
-					} else if (scrollTop >= num.STM) {// F
-						methods.changePosition.call(null, num.STM - num.ST, 'auto', relative_style);
-					}
-				}
-			} else if (methods.scrollDirection.call(null, scrollTop, scrollTopPrev) == 'up') {
-				if (type === 1) {
-					if (scrollTop <= num.AT) {// D
-						methods.changePosition.call(null, 0, 'auto', relative_style);
-					} else if (scrollTop <= num.STB) {// C
-						methods.changePosition.call(null, 0, 'auto', fixed_style);
-					}
-				} else if (type === 2) {
-					if (scrollTop <= num.AT) {// D
-						methods.changePosition.call(null, 0, 'auto', relative_style);
-					} else if (scrollTop <= num.STM) {// C
-						num.STM = scrollTop;
-						methods.changePosition.call(null, 0, 'auto', fixed_style);
-					} else if (scrollBottom <= (num.STM + num.SH)) {// E
-						methods.changePosition.call(null, num.STM - num.ST, 'auto', relative_style);
-					}
-				}
-			} else if (methods.scrollDirection.call(null, scrollTop, scrollTopPrev) == 'stay') {
-				if (type === 1) {
-					if (scrollTop <= num.ST) {
-						methods.changePosition.call(null, 0, 'auto', relative_style);
-					} else if (scrollTop <= num.STB) {
-						methods.changePosition.call(null, 0, 'auto', fixed_style);
+		run:function(OPT, n, A, s) {
+			var elm = this;
+			if (OPT.flag) {
+				var loop = function() {
+					if (eval(OPT.flag)) {
+						clearTimeout(loopTimer);
+						n = methods.getNum.call(elm, n, A);
+						var type = methods.getType.call(null, n, s);
+						methods.loading.call(elm, OPT, type, n, s);
 					} else {
-						methods.changePosition.call(null, num.STB - num.ST, 'auto', relative_style);
+						loopTimer = setTimeout(loop, 0);
 					}
-				} else if (type === 2) {
-					if (scrollTop <= num.ST) {
-						methods.changePosition.call(null, 0, 'auto', relative_style);
-					} else if (scrollTop <= num.STB) {
-						num.STM = scrollTop;
-						methods.changePosition.call(null, 0, 'auto', fixed_style);
-					} else {
-						num.STM = num.STB;
-						methods.changePosition.call(null, num.STB - num.ST, 'auto', relative_style);
-					}
-				}
+				};
+				var loopTimer = setTimeout(loop, 0);
+			} else {
+				n = methods.getNum.call(elm, n, A);
+				var type = methods.getType.call(null, n, s);
+				methods.loading.call(elm, OPT, type, n, s);
 			}
-			scrollTopPrev = scrollTop;
 		},
 		loading:function(op, t, n, s) {
 			methods.scrolling.call(window, op, t, n, s);
@@ -146,6 +85,67 @@
 			$(window).off('scroll.followMeSidebar').on('scroll.followMeSidebar', function() {
 				methods.scrolling.call(this, op, t, n, s);
 			});
+		},
+		scrolling:function(options, type, num, fixedSty) {
+			scrollTop = $(this).scrollTop();
+			scrollBottom = scrollTop + windowH;
+			
+			if (methods.scrollDirection.call(null, scrollTop, scrollTopPrev) == 'down') {
+				if (type === 1) {
+					if ((scrollBottom - (windowH - num.SH)) >= num.AB) {// B
+						methods.changePosition.call(null, num.STB - num.ST, 0, relativeSty);
+					} else if (num.ST <= scrollTop) {// A
+						methods.changePosition.call(null, 0, 'auto', fixedSty);
+					}
+				} else if (type === 2) {
+					if (scrollBottom >= num.AB) {// B
+						methods.changePosition.call(null, num.STB - num.ST, 'auto', relativeSty);
+					} else if (scrollBottom >= (num.STM + num.SH)) {// A
+						num.STM = scrollBottom - num.SH;
+						methods.changePosition.call(null, 'auto', 0, fixedSty);
+					} else if (scrollTop >= num.STM) {// F
+						methods.changePosition.call(null, num.STM - num.ST, 'auto', relativeSty);
+					}
+				}
+			} else if (methods.scrollDirection.call(null, scrollTop, scrollTopPrev) == 'up') {
+				if (type === 1) {
+					if (scrollTop <= num.AT) {// D
+						methods.changePosition.call(null, 0, 'auto', relativeSty);
+					} else if (scrollTop <= num.STB) {// C
+						methods.changePosition.call(null, 0, 'auto', fixedSty);
+					}
+				} else if (type === 2) {
+					if (scrollTop <= num.AT) {// D
+						methods.changePosition.call(null, 0, 'auto', relativeSty);
+					} else if (scrollTop <= num.STM) {// C
+						num.STM = scrollTop;
+						methods.changePosition.call(null, 0, 'auto', fixedSty);
+					} else if (scrollBottom <= (num.STM + num.SH)) {// E
+						methods.changePosition.call(null, num.STM - num.ST, 'auto', relativeSty);
+					}
+				}
+			} else if (methods.scrollDirection.call(null, scrollTop, scrollTopPrev) == 'stay') {
+				if (type === 1) {
+					if (scrollTop <= num.ST) {
+						methods.changePosition.call(null, 0, 'auto', relativeSty);
+					} else if (scrollTop <= num.STB) {
+						methods.changePosition.call(null, 0, 'auto', fixedSty);
+					} else {
+						methods.changePosition.call(null, num.STB - num.ST, 'auto', relativeSty);
+					}
+				} else if (type === 2) {
+					if (scrollTop <= num.ST) {
+						methods.changePosition.call(null, 0, 'auto', relativeSty);
+					} else if (scrollTop <= num.STB) {
+						num.STM = scrollTop;
+						methods.changePosition.call(null, 0, 'auto', fixedSty);
+					} else {
+						num.STM = num.STB;
+						methods.changePosition.call(null, num.STB - num.ST, 'auto', relativeSty);
+					}
+				}
+			}
+			scrollTopPrev = scrollTop;
 		}
 	}
 	
@@ -155,7 +155,7 @@
 		} else {
 			var options = $.extend({
 				area:'body',
-				flug:true,
+				flag:true,
 				device:false
 			}, options);
 		}
@@ -164,7 +164,7 @@
 			var moveableArea = $(options.area);
 			var num = {};
 			var sidebarElm = this;
-			var fixed_style = {
+			var fixedSty = {
 				'position':'fixed'
 			};
 			
@@ -191,10 +191,10 @@
 						devWidth = $(window).width();
 					
 					if (!options.device) {
-						methods.run.call(sidebarElm, options, num, moveableArea, fixed_style);
+						methods.run.call(sidebarElm, options, num, moveableArea, fixedSty);
 					} else {
 						if (devWidth > options.device) {
-							methods.run.call(sidebarElm, options, num, moveableArea, fixed_style);
+							methods.run.call(sidebarElm, options, num, moveableArea, fixedSty);
 						} else {
 							$(sidebarElm).followMeSidebar('destroy');
 						}
