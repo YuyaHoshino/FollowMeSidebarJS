@@ -175,6 +175,11 @@
 			
 			if (action == 'destroy') {
 				$(window).off('scroll.' + fms);
+				$('#' + fms).css({
+					'left':'0',
+					'position':'relative',
+					'width':'auto'
+				});
 				return false;
 			}
 			
